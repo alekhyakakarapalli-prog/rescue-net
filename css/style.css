@@ -1,0 +1,302 @@
+/* Rescue-Net Custom Tactical Mission Control Stylesheet */
+
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+:root {
+  --color-emergency-red: #ef4444;
+  --color-emergency-dark: #991b1b;
+  --color-tactical-blue: #0284c7;
+  --color-tactical-cyan: #38bdf8;
+  --color-bg-primary: #0b1120;
+  --color-bg-secondary: #0f172a;
+  --color-card-bg: rgba(15, 23, 42, 0.85);
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #0b1120;
+  color: #f1f5f9;
+  overflow-x: hidden;
+}
+
+.font-hud {
+  font-family: 'Chakra Petch', sans-serif;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Glassmorphism tactical panels */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+}
+
+.glass-panel-glow {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  box-shadow: 0 0 25px rgba(239, 68, 68, 0.2);
+}
+
+.glass-panel-cyan {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.15);
+}
+
+/* Radar & SOS Pulsing Keyframes */
+@keyframes sosPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.85);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 35px rgba(239, 68, 68, 0);
+    transform: scale(1.04);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    transform: scale(1);
+  }
+}
+
+.animate-sos-pulse {
+  animation: sosPulse 1.8s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+@keyframes beaconRing {
+  0% {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+.beacon-wave {
+  position: absolute;
+  border-radius: 50%;
+  animation: beaconRing 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+
+/* Radar Sweep Animation */
+@keyframes radarSweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.radar-beam {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 50%;
+  height: 50%;
+  transform-origin: top left;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.45) 0%, rgba(56, 189, 248, 0) 70%);
+  border-radius: 0 0 100% 0;
+  animation: radarSweep 4s linear infinite;
+  pointer-events: none;
+}
+
+/* Emergency Flashing Siren */
+@keyframes emergencyFlash {
+  0%, 100% {
+    background-color: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.9);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+  }
+  50% {
+    background-color: rgba(14, 165, 233, 0.2);
+    border-color: rgba(14, 165, 233, 0.9);
+    box-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
+  }
+}
+
+.emergency-flashing {
+  animation: emergencyFlash 1s infinite alternate;
+}
+
+/* Sound Wave Bars */
+@keyframes soundWave {
+  0%, 100% {
+    height: 6px;
+  }
+  50% {
+    height: 28px;
+  }
+}
+
+.wave-bar {
+  display: inline-block;
+  width: 4px;
+  background-color: #ef4444;
+  border-radius: 3px;
+  margin: 0 2px;
+}
+
+.wave-bar-1 { animation: soundWave 0.5s ease-in-out infinite; }
+.wave-bar-2 { animation: soundWave 0.7s ease-in-out infinite 0.15s; }
+.wave-bar-3 { animation: soundWave 0.4s ease-in-out infinite 0.3s; }
+.wave-bar-4 { animation: soundWave 0.6s ease-in-out infinite 0.2s; }
+.wave-bar-5 { animation: soundWave 0.8s ease-in-out infinite 0.1s; }
+
+/* Grid Texture Background */
+.bg-grid-pattern {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #0b1120;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Leaflet Map Customizations */
+.leaflet-container {
+  font-family: inherit;
+  background: #0a0f1d !important;
+}
+
+/* Invert OSM tiles slightly for high-tech dark mode aesthetics */
+.leaflet-tile-pane {
+  filter: brightness(0.7) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.75);
+}
+
+/* Popup styling */
+.leaflet-popup-content-wrapper {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid #38bdf8 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.8) !important;
+  padding: 0 !important;
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px !important;
+  line-height: 1.5 !important;
+}
+
+.leaflet-popup-tip {
+  background: #0f172a !important;
+  border: 1px solid #38bdf8 !important;
+}
+
+/* Custom Marker CSS Pin */
+.custom-victim-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.custom-victim-pin .pin-core {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 10px rgba(0,0,0,0.6);
+  z-index: 2;
+}
+
+.custom-victim-pin.critical .pin-core {
+  background: #ef4444;
+  border: 2px solid #ffffff;
+}
+
+.custom-victim-pin.warning .pin-core {
+  background: #f59e0b;
+  border: 2px solid #ffffff;
+}
+
+.custom-victim-pin.rescued .pin-core {
+  background: #10b981;
+  border: 2px solid #ffffff;
+}
+
+.custom-victim-pin .pin-pulse {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  animation: beaconRing 1.8s infinite;
+  z-index: 1;
+}
+
+.custom-victim-pin.critical .pin-pulse {
+  background: rgba(239, 68, 68, 0.4);
+  border: 1px solid #ef4444;
+}
+
+.custom-victim-pin.warning .pin-pulse {
+  background: rgba(245, 158, 11, 0.4);
+  border: 1px solid #f59e0b;
+}
+
+.custom-victim-pin.rescued .pin-pulse {
+  background: rgba(16, 185, 129, 0.4);
+  border: 1px solid #10b981;
+}
+
+/* Drone Marker */
+.drone-leaflet-icon {
+  transition: transform 0.25s linear;
+}
+
+/* Tactical HUD crosshair */
+.hud-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: #38bdf8;
+  pointer-events: none;
+}
+.hud-corner-tl { top: 8px; left: 8px; border-top: 2px solid; border-left: 2px solid; }
+.hud-corner-tr { top: 8px; right: 8px; border-top: 2px solid; border-right: 2px solid; }
+.hud-corner-bl { bottom: 8px; left: 8px; border-bottom: 2px solid; border-left: 2px solid; }
+.hud-corner-br { bottom: 8px; right: 8px; border-bottom: 2px solid; border-right: 2px solid; }
+
+/* Thermal Video Filter Simulation */
+.thermal-mode {
+  filter: invert(1) hue-rotate(180deg) saturate(2) contrast(1.4) !important;
+}
+
+/* LoRa Packet Animation Path */
+@keyframes packetTravel {
+  0% { offset-distance: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+.node-pulse {
+  animation: beaconRing 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}

@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Rescue-Net - AI-Powered Natural Disaster Management System</title>
+
+  <!-- PWA Metadata -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#DC2626">
+  <meta name="description" content="AI-Powered Natural Disaster Management, Offline LoRa/BLE Mesh SOS & Autonomous Drone Command System">
+  <link rel="icon" type="image/svg+xml" href="./icons/icon.svg">
+
+  <!-- Tailwind CSS CDN with configuration -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            disaster: {
+              red: '#EF4444',
+              darkRed: '#991B1B',
+              navy: '#0B1120',
+              slate: '#0F172A',
+              cyan: '#38BDF8',
+              amber: '#F59E0B',
+              emerald: '#10B981'
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Leaflet.js Free GIS Maps (No API key required) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Firebase Compat SDKs (Offline-first resilient layer) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <!-- Custom Tactical Stylesheet -->
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="bg-[#0B1120] text-slate-100 min-h-screen flex flex-col bg-grid-pattern selection:bg-red-600 selection:text-white pb-16 md:pb-0">
+
+  <!-- TOP EMERGENCY HOTLINE TICKER -->
+  <div class="bg-red-950/80 border-b border-red-800/60 py-1.5 px-4 text-xs font-mono">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+        <span class="text-red-400 font-bold tracking-wide">NATIONAL DISASTER EMERGENCY HOTLINES:</span>
+        <span class="text-slate-300">Universal: <strong class="text-white">112</strong></span>
+        <span class="hidden sm:inline text-slate-500">•</span>
+        <span class="hidden sm:inline text-slate-300">NDMA Helpline: <strong class="text-white">1078</strong></span>
+        <span class="hidden md:inline text-slate-500">•</span>
+        <span class="hidden md:inline text-slate-300">Ambulance: <strong class="text-white">108</strong></span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="network-status-badge" class="px-2 py-0.5 rounded text-[10px] font-hud bg-emerald-950 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          ONLINE: CLOUD SYNC
+        </span>
+        <button onclick="window.appRouter.openFirebaseConfigModal()" class="text-slate-400 hover:text-cyan-300 text-xs transition" title="Firebase Settings">
+          <i class="fas fa-database"></i> Firebase DB
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAVIGATION HEADER -->
+  <header class="sticky top-0 z-40 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Logo & Branding -->
+        <a href="#home" class="flex items-center gap-3 group">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-600 to-red-800 border border-red-400/40 flex items-center justify-center shadow-lg shadow-red-600/30 group-hover:scale-105 transition">
+            <i class="fas fa-shield-halved text-xl text-white"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xl font-hud font-bold tracking-wider text-white">RESCUE-NET</span>
+              <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-700/50">AI 2.0</span>
+            </div>
+            <p class="text-[10px] text-slate-400 tracking-tight">AI-Powered Disaster Management System</p>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation Links -->
+        <nav class="hidden lg:flex items-center gap-1 text-sm font-medium">
+          <a href="#home" class="nav-link px-3 py-2 rounded-lg hover:text-cyan-400 transition" data-route="home">
+            <i class="fas fa-house-chimney text-xs mr-1"></i> Home
+          </a>
+          <a href="#warning" class="nav-link px-3 py-2 rounded-lg hover:text-cyan-400 transition" data-route="warning">
+            <i class="fas fa-triangle-exclamation text-xs mr-1 text-amber-400"></i> Early Warning
+          </a>
+          <a href="#tracking" class="nav-link px-3 py-2 rounded-lg hover:text-cyan-400 transition" data-route="tracking">
+            <i class="fas fa-map-location-dot text-xs mr-1 text-red-400"></i> Live Tracking
+          </a>
+          <a href="#drones" class="nav-link px-3 py-2 rounded-lg hover:text-cyan-400 transition" data-route="drones">
+            <i class="fas fa-helicopter text-xs mr-1 text-cyan-400"></i> Drone Command
+          </a>
+          <a href="#mesh" class="nav-link px-3 py-2 rounded-lg hover:text-cyan-400 transition" data-route="mesh">
+            <i class="fas fa-network-wired text-xs mr-1 text-purple-400"></i> Offline Mesh
+          </a>
+          <a href="#shelters" class="nav-link px-3 py-2 rounded-lg hover:text-cyan-400 transition" data-route="shelters">
+            <i class="fas fa-campground text-xs mr-1 text-emerald-400"></i> Shelters
+          </a>
+        </nav>
+
+        <!-- Right Side Actions: Auth & Quick SOS -->
+        <div class="hidden sm:flex items-center gap-3">
+          <!-- Auth State Container -->
+          <div id="auth-logged-out">
+            <button onclick="window.appRouter.openAuthModal()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5">
+              <i class="fas fa-user-shield text-cyan-400"></i> Login / Role
+            </button>
+          </div>
+          <div id="auth-logged-in" class="hidden flex items-center gap-2">
+            <div class="text-right">
+              <span id="auth-user-name" class="text-xs font-bold text-white block leading-tight">Capt. Vikram</span>
+              <span id="auth-role-badge" class="px-1.5 py-0.2 rounded text-[9px] font-hud bg-red-600 text-white font-bold">COMMANDER</span>
+            </div>
+            <button onclick="window.appRouter.logout()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-red-950/80 text-slate-400 hover:text-red-400 transition" title="Logout">
+              <i class="fas fa-arrow-right-from-bracket text-xs"></i>
+            </button>
+          </div>
+
+          <!-- Quick SOS Header Trigger -->
+          <button onclick="window.sosManager.handleQuickSOSClick()" class="px-4 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-hud font-bold uppercase tracking-wider shadow-lg shadow-red-600/40 transition flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-white animate-ping"></span>
+            SOS Emergency
+          </button>
+        </div>
+
+        <!-- Mobile Hamburger Toggle -->
+        <div class="flex lg:hidden items-center gap-2">
+          <button onclick="window.sosManager.handleQuickSOSClick()" class="px-2.5 py-1 bg-red-600 text-white rounded text-xs font-bold">
+            SOS
+          </button>
+          <button id="mobile-menu-toggle" class="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white">
+            <i class="fas fa-bars text-lg"></i>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Mobile Drawer Menu -->
+    <div id="mobile-drawer" class="hidden lg:hidden border-t border-slate-800 bg-[#0F172A]/98 backdrop-blur-xl px-4 pt-3 pb-6 space-y-2">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+        <span class="text-xs font-hud text-slate-400 uppercase">MISSION NAVIGATION</span>
+        <button id="mobile-drawer-close" class="text-slate-400 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <a href="#home" class="drawer-link block py-2 px-3 rounded-lg text-sm text-slate-200 hover:bg-slate-800" data-route="home">
+        <i class="fas fa-house-chimney w-5 text-slate-400"></i> Home Landing
+      </a>
+      <a href="#warning" class="drawer-link block py-2 px-3 rounded-lg text-sm text-slate-200 hover:bg-slate-800" data-route="warning">
+        <i class="fas fa-triangle-exclamation w-5 text-amber-400"></i> Early Warning System
+      </a>
+      <a href="#tracking" class="drawer-link block py-2 px-3 rounded-lg text-sm text-slate-200 hover:bg-slate-800" data-route="tracking">
+        <i class="fas fa-map-location-dot w-5 text-red-400"></i> Live Victim Tracking (GIS)
+      </a>
+      <a href="#drones" class="drawer-link block py-2 px-3 rounded-lg text-sm text-slate-200 hover:bg-slate-800" data-route="drones">
+        <i class="fas fa-helicopter w-5 text-cyan-400"></i> Drone Command Center
+      </a>
+      <a href="#mesh" class="drawer-link block py-2 px-3 rounded-lg text-sm text-slate-200 hover:bg-slate-800" data-route="mesh">
+        <i class="fas fa-network-wired w-5 text-purple-400"></i> Offline Mesh & Store-Forward
+      </a>
+      <a href="#shelters" class="drawer-link block py-2 px-3 rounded-lg text-sm text-slate-200 hover:bg-slate-800" data-route="shelters">
+        <i class="fas fa-campground w-5 text-emerald-400"></i> Shelters & Medical Supply
+      </a>
+      <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
+        <button onclick="window.appRouter.openAuthModal()" class="py-2 px-4 rounded-lg bg-slate-800 text-xs text-white font-semibold flex-1 mr-2 text-center">
+          <i class="fas fa-user-shield mr-1"></i> Account / Role
+        </button>
+        <button onclick="window.appRouter.openFirebaseConfigModal()" class="p-2 rounded-lg bg-slate-800 text-slate-300">
+          <i class="fas fa-database"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ACTIVE CITIZEN SOS BANNER (Sticky Alert when SOS sent) -->
+  <div id="citizen-active-sos-banner" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 hidden"></div>
+
+  <!-- MAIN CONTENT CONTAINER (SPA VIEW ROUTER) -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ========================================== -->
+    <!-- 1. HOME / LANDING PAGE VIEW               -->
+    <!-- ========================================== -->
+    <section id="view-home" class="space-y-12">
+      
+      <!-- HERO SECTION -->
+      <div class="relative overflow-hidden rounded-3xl glass-panel border border-slate-800 p-6 sm:p-10 lg:p-14 text-center">
+        <!-- Background Ambient Gradients -->
+        <div class="absolute -top-24 -left-24 w-96 h-96 bg-red-600/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-cyan-600/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- Tagline & Heading -->
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-950/80 border border-red-700/60 text-red-300 text-xs font-hud mb-6">
+          <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+          MISSION CRITICAL RESCUE ECOSYSTEM
+        </div>
+
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-4 leading-tight">
+          Rescue-Net
+        </h1>
+        <p class="text-xl sm:text-2xl font-bold bg-gradient-to-r from-red-400 via-rose-300 to-cyan-300 bg-clip-text text-transparent mb-4">
+          "Saving Lives When Networks Fail"
+        </p>
+        <p class="max-w-2xl mx-auto text-sm sm:text-base text-slate-300 mb-10 leading-relaxed">
+          Next-generation disaster response platform combining <strong>Offline Store-and-Forward Mesh (LoRa & Bluetooth)</strong>, 
+          autonomous <strong>Rescue Drone Fleet Telemetry</strong>, and <strong>Real-time GIS Victim Triage</strong> when cellular towers collapse.
+        </p>
+
+        <!-- BIG RED SOS BUTTON SECTION -->
+        <div class="flex flex-col items-center justify-center my-8">
+          <div class="relative flex items-center justify-center">
+            <!-- Pulsating Concentric Radar Wave Rings -->
+            <div class="beacon-wave w-52 h-52 bg-red-600/20 border border-red-500/40"></div>
+            <div class="beacon-wave w-44 h-44 bg-red-600/30 border border-red-500/50" style="animation-delay: 0.6s;"></div>
+            <div class="beacon-wave w-36 h-36 bg-red-600/40 border border-red-500/60" style="animation-delay: 1.2s;"></div>
+
+            <!-- Big Interactive Red SOS Button -->
+            <button id="hero-sos-btn" class="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-gradient-to-b from-red-500 via-red-600 to-red-800 text-white font-hud font-extrabold text-2xl sm:text-3xl tracking-wider shadow-2xl shadow-red-600/70 hover:scale-105 active:scale-95 transition-all duration-200 border-4 border-white/90 flex flex-col items-center justify-center animate-sos-pulse group">
+              <i class="fas fa-tower-broadcast text-xl sm:text-2xl mb-1 group-hover:animate-bounce"></i>
+              <span>SOS</span>
+              <span class="text-[9px] font-mono tracking-widest text-red-200 mt-0.5">TAP TO RESCUE</span>
+            </button>
+          </div>
+
+          <!-- GPS Fix Indicator -->
+          <div class="mt-8 flex flex-wrap items-center justify-center gap-3 text-xs font-mono">
+            <span id="sos-coords-badge" class="px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-emerald-400 flex items-center gap-1.5">
+              <i class="fas fa-location-crosshairs"></i> GPS Ready (Acquiring Satellites)
+            </span>
+            <span class="px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-cyan-300 flex items-center gap-1.5">
+              <i class="fas fa-satellite"></i> LoRa 915MHz Mesh Active
+            </span>
+          </div>
+        </div>
+
+        <!-- Quick Access Action Buttons -->
+        <div class="flex flex-wrap items-center justify-center gap-3 mt-6">
+          <button onclick="window.appRouter.navigateTo('tracking')" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 border border-slate-700">
+            <i class="fas fa-map-location-dot text-red-400"></i> Open Live Victim GIS
+          </button>
+          <button onclick="window.appRouter.navigateTo('drones')" class="px-5 py-2.5 bg-cyan-900/60 hover:bg-cyan-800/80 text-cyan-200 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-cyan-700/50">
+            <i class="fas fa-helicopter text-cyan-400"></i> Drone Command Radar
+          </button>
+          <button onclick="window.appRouter.navigateTo('mesh')" class="px-5 py-2.5 bg-purple-950/60 hover:bg-purple-900/80 text-purple-200 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-purple-700/50">
+            <i class="fas fa-network-wired text-purple-400"></i> Store-Forward Simulator
+          </button>
+        </div>
+
+      </div>
+
+      <!-- STATS COUNTER ROW -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div class="glass-panel p-5 rounded-2xl border border-slate-800 flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-red-600/20 text-red-400 border border-red-500/30 flex items-center justify-center text-xl shrink-0">
+            <i class="fas fa-users-line"></i>
+          </div>
+          <div>
+            <span class="text-xs font-mono text-slate-400 uppercase tracking-wider block">Victims Rescued</span>
+            <div id="stats-victims-rescued" class="text-2xl sm:text-3xl font-hud font-bold text-white">1,428</div>
+            <span class="text-[10px] text-emerald-400 font-mono"><i class="fas fa-arrow-trend-up"></i> +14 today</span>
+          </div>
+        </div>
+
+        <div class="glass-panel p-5 rounded-2xl border border-slate-800 flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-cyan-600/20 text-cyan-400 border border-cyan-500/30 flex items-center justify-center text-xl shrink-0">
+            <i class="fas fa-helicopter"></i>
+          </div>
+          <div>
+            <span class="text-xs font-mono text-slate-400 uppercase tracking-wider block">Active Drones</span>
+            <div id="stats-active-drones" class="text-2xl sm:text-3xl font-hud font-bold text-white">4</div>
+            <span class="text-[10px] text-cyan-300 font-mono">LoRa airborne link</span>
+          </div>
+        </div>
+
+        <div class="glass-panel p-5 rounded-2xl border border-slate-800 flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0">
+            <i class="fas fa-campground"></i>
+          </div>
+          <div>
+            <span class="text-xs font-mono text-slate-400 uppercase tracking-wider block">Shelters Open</span>
+            <div id="stats-shelters-available" class="text-2xl sm:text-3xl font-hud font-bold text-white">4</div>
+            <span class="text-[10px] text-emerald-300 font-mono">495 beds open</span>
+          </div>
+        </div>
+
+        <div class="glass-panel p-5 rounded-2xl border border-slate-800 flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-purple-600/20 text-purple-400 border border-purple-500/30 flex items-center justify-center text-xl shrink-0">
+            <i class="fas fa-circle-nodes"></i>
+          </div>
+          <div>
+            <span class="text-xs font-mono text-slate-400 uppercase tracking-wider block">Mesh Nodes</span>
+            <div id="stats-mesh-nodes" class="text-2xl sm:text-3xl font-hud font-bold text-white">320</div>
+            <span class="text-[10px] text-purple-300 font-mono">Store & forward</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SYSTEM HIGHLIGHTS / 4 PILLARS -->
+      <div>
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-hud font-bold text-white">System Architecture & Core Capabilities</h2>
+            <p class="text-xs text-slate-400">Integrated disaster intelligence layer for emergency responders</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          
+          <!-- Pillar 1 -->
+          <div onclick="window.appRouter.navigateTo('warning')" class="glass-panel p-5 rounded-2xl border border-slate-800 hover:border-amber-400 transition cursor-pointer group">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition">
+              <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1.5 group-hover:text-amber-400 transition">Early Warning System</h3>
+            <p class="text-xs text-slate-300 mb-3 leading-relaxed">
+              OpenWeatherMap live telemetry & hazard classification (Cyclone, Flood, Tremor) with built-in Web Audio siren alert.
+            </p>
+            <span class="text-xs font-bold text-amber-400 flex items-center gap-1">
+              Explore Alerts <i class="fas fa-arrow-right text-[10px]"></i>
+            </span>
+          </div>
+
+          <!-- Pillar 2 -->
+          <div onclick="window.appRouter.navigateTo('tracking')" class="glass-panel p-5 rounded-2xl border border-slate-800 hover:border-red-400 transition cursor-pointer group">
+            <div class="w-10 h-10 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition">
+              <i class="fas fa-map-location-dot"></i>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1.5 group-hover:text-red-400 transition">Live Victim Tracking</h3>
+            <p class="text-xs text-slate-300 mb-3 leading-relaxed">
+              Split-screen triage dashboard with OpenStreetMap GIS, pulsing victim pins, and 1-click autonomous drone assignment.
+            </p>
+            <span class="text-xs font-bold text-red-400 flex items-center gap-1">
+              View Map GIS <i class="fas fa-arrow-right text-[10px]"></i>
+            </span>
+          </div>
+
+          <!-- Pillar 3 -->
+          <div onclick="window.appRouter.navigateTo('drones')" class="glass-panel p-5 rounded-2xl border border-slate-800 hover:border-cyan-400 transition cursor-pointer group">
+            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition">
+              <i class="fas fa-helicopter"></i>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1.5 group-hover:text-cyan-400 transition">Drone Command Center</h3>
+            <p class="text-xs text-slate-300 mb-3 leading-relaxed">
+              Real-time hexacopter telemetry, animated flight corridor tracking, aerial recon video with FLIR Thermal mode, and LoRa packet sniffer.
+            </p>
+            <span class="text-xs font-bold text-cyan-400 flex items-center gap-1">
+              Launch Drones <i class="fas fa-arrow-right text-[10px]"></i>
+            </span>
+          </div>
+
+          <!-- Pillar 4 -->
+          <div onclick="window.appRouter.navigateTo('mesh')" class="glass-panel p-5 rounded-2xl border border-slate-800 hover:border-purple-400 transition cursor-pointer group">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition">
+              <i class="fas fa-network-wired"></i>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1.5 group-hover:text-purple-400 transition">Offline Mesh Network</h3>
+            <p class="text-xs text-slate-300 mb-3 leading-relaxed">
+              Store-and-forward peer architecture: Phone ➔ Phone ➔ Drone ➔ Rescue HQ with Web Bluetooth API integration.
+            </p>
+            <span class="text-xs font-bold text-purple-400 flex items-center gap-1">
+              Test Offline Mode <i class="fas fa-arrow-right text-[10px]"></i>
+            </span>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 2. EARLY WARNING SYSTEM PAGE VIEW         -->
+    <!-- ========================================== -->
+    <section id="view-warning" class="space-y-6 hidden">
+      
+      <!-- Top Title & Weather Radar Banner -->
+      <div class="glass-panel rounded-2xl p-6 border border-slate-800">
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2 py-0.5 rounded text-[10px] font-hud bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase">METEOROLOGICAL RADAR</span>
+              <span class="text-xs text-slate-400 font-mono">OpenWeatherMap Live Polling</span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-hud font-bold text-white">Early Warning & Threat Broadcast Center</h2>
+            <p class="text-xs sm:text-sm text-slate-300">Continuous telemetry monitoring for Flood, Cyclone, Earthquake, and Tsunami hazards.</p>
+          </div>
+
+          <!-- Emergency Siren Controller -->
+          <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+            <button id="siren-toggle-btn" onclick="window.weatherSystem.toggleSiren()" class="w-full sm:w-auto px-5 py-3 rounded-xl bg-red-900/60 hover:bg-red-800 text-white font-hud font-bold text-xs uppercase tracking-wider border border-red-600/50 shadow-lg shadow-red-900/40 transition flex items-center justify-center gap-2">
+              <i id="siren-icon" class="fas fa-bullhorn text-red-400 text-xl"></i>
+              <span id="siren-status-text">TEST EMERGENCY SIREN</span>
+            </button>
+
+            <!-- Sound Wave Visualizer Bars -->
+            <div id="siren-wave-container" class="hidden items-center h-8 px-2 bg-slate-900 rounded-lg border border-red-600/40">
+              <div class="wave-bar wave-bar-1"></div>
+              <div class="wave-bar wave-bar-2"></div>
+              <div class="wave-bar wave-bar-3"></div>
+              <div class="wave-bar wave-bar-4"></div>
+              <div class="wave-bar wave-bar-5"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flashing Emergency Banner (Displayed during active siren) -->
+        <div id="siren-active-banner" class="hidden mt-4 p-3 rounded-xl bg-red-600/30 border-2 border-red-500 text-center emergency-flashing">
+          <span class="text-sm font-hud font-bold text-white tracking-widest flex items-center justify-center gap-2">
+            <i class="fas fa-bell animate-bounce text-red-400"></i>
+            CRITICAL EVACUATION SIREN TRANSMITTING AT DUAL-FREQUENCY WAIL (800-1100 Hz)
+            <i class="fas fa-bell animate-bounce text-red-400"></i>
+          </span>
+        </div>
+
+        <!-- Live Sensor Telemetry Strip -->
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-6 text-xs font-mono">
+          <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+            <span class="text-slate-400 block text-[10px] uppercase">MONITORED CITY</span>
+            <div id="weather-live-city" class="text-white font-bold text-sm">Chennai Coast</div>
+          </div>
+          <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+            <span class="text-slate-400 block text-[10px] uppercase">TEMPERATURE</span>
+            <div id="weather-live-temp" class="text-amber-400 font-bold text-sm">31°C (Heat Index 36°)</div>
+          </div>
+          <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+            <span class="text-slate-400 block text-[10px] uppercase">ATMOSPHERIC RADAR</span>
+            <div id="weather-live-desc" class="text-cyan-400 font-bold text-sm">HEAVY GALE RAIN</div>
+          </div>
+          <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+            <span class="text-slate-400 block text-[10px] uppercase">WIND VELOCITY</span>
+            <div id="weather-live-wind" class="text-red-400 font-bold text-sm">74 km/h GUSTS</div>
+          </div>
+          <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 col-span-2 sm:col-span-1 flex items-center justify-between">
+            <div>
+              <span class="text-slate-400 block text-[10px] uppercase">HUMIDITY</span>
+              <div id="weather-live-humidity" class="text-cyan-300 font-bold text-sm">92%</div>
+            </div>
+            <button onclick="document.getElementById('weather-api-modal').classList.remove('hidden')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[10px] border border-slate-700" title="Configure OpenWeatherMap API Key">
+              API Key
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Severity Filter & Summary Badges -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+        <!-- Filter Buttons -->
+        <div class="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+          <button onclick="window.weatherSystem.setFilter('ALL')" class="warning-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold transition bg-red-600 text-white shadow-md" data-type="ALL">
+            All Threat Feeds
+          </button>
+          <button onclick="window.weatherSystem.setFilter('FLOOD')" class="warning-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold transition bg-slate-800/80 text-slate-300 hover:bg-slate-700" data-type="FLOOD">
+            <i class="fas fa-water text-cyan-400 mr-1"></i> Flood
+          </button>
+          <button onclick="window.weatherSystem.setFilter('CYCLONE')" class="warning-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold transition bg-slate-800/80 text-slate-300 hover:bg-slate-700" data-type="CYCLONE">
+            <i class="fas fa-tornado text-amber-400 mr-1"></i> Cyclone
+          </button>
+          <button onclick="window.weatherSystem.setFilter('EARTHQUAKE')" class="warning-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold transition bg-slate-800/80 text-slate-300 hover:bg-slate-700" data-type="EARTHQUAKE">
+            <i class="fas fa-house-crack text-red-400 mr-1"></i> Tremor
+          </button>
+          <button onclick="window.weatherSystem.setFilter('TSUNAMI')" class="warning-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold transition bg-slate-800/80 text-slate-300 hover:bg-slate-700" data-type="TSUNAMI">
+            <i class="fas fa-wave-square text-emerald-400 mr-1"></i> Tsunami
+          </button>
+        </div>
+
+        <!-- Metric Badges -->
+        <div class="flex items-center gap-2 text-xs font-mono">
+          <span class="px-2.5 py-1 rounded bg-red-950/80 border border-red-700/60 text-red-300">
+            Critical: <strong id="warning-count-critical" class="text-white">2</strong>
+          </span>
+          <span class="px-2.5 py-1 rounded bg-amber-950/80 border border-amber-700/60 text-amber-300">
+            Warning: <strong id="warning-count-warning" class="text-white">1</strong>
+          </span>
+          <span class="px-2.5 py-1 rounded bg-emerald-950/80 border border-emerald-700/60 text-emerald-300">
+            Safe: <strong id="warning-count-safe" class="text-white">1</strong>
+          </span>
+          <button onclick="document.getElementById('broadcast-alert-modal').classList.remove('hidden')" class="px-3 py-1 bg-cyan-700 hover:bg-cyan-600 text-white rounded text-xs font-bold font-hud transition flex items-center gap-1">
+            <i class="fas fa-plus text-[10px]"></i> Broadcast
+          </button>
+        </div>
+      </div>
+
+      <!-- Colored Alert Cards Container -->
+      <div id="alert-cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Dynamically rendered by weather.js -->
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 3. LIVE VICTIM TRACKING PAGE (CORE PAGE)   -->
+    <!-- ========================================== -->
+    <section id="view-tracking" class="space-y-4 hidden">
+      
+      <!-- Top Bar: Metrics & Fast Simulator Trigger -->
+      <div class="glass-panel p-4 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-xl sm:text-2xl font-hud font-bold text-white flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-red-500 animate-ping"></span>
+            Live Victim Tracking & GIS Triage
+          </h2>
+          <p class="text-xs text-slate-400">Synchronized real-time tactical map with OpenStreetMap & autonomous drone dispatch</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Live Metrics -->
+          <div class="hidden md:flex items-center gap-2 text-xs font-mono mr-2">
+            <span class="px-2 py-1 rounded bg-slate-900 border border-slate-700">Total: <strong id="metric-total-victims" class="text-white">5</strong></span>
+            <span class="px-2 py-1 rounded bg-red-950 border border-red-700 text-red-300">Critical: <strong id="metric-critical-victims" class="text-white">2</strong></span>
+            <span class="px-2 py-1 rounded bg-amber-950 border border-amber-700 text-amber-300">En Route: <strong id="metric-assigned-victims" class="text-white">2</strong></span>
+            <span class="px-2 py-1 rounded bg-emerald-950 border border-emerald-700 text-emerald-300">Rescued: <strong id="metric-rescued-victims" class="text-white">1</strong></span>
+          </div>
+
+          <!-- Simulate Incoming SOS button (Outstanding viva feature!) -->
+          <button onclick="window.victimTracking.simulateIncomingSOS()" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-red-600/30">
+            <i class="fas fa-satellite-dish"></i> Intercept New SOS
+          </button>
+        </div>
+      </div>
+
+      <!-- SPLIT SCREEN LAYOUT: LEFT ROSTER, RIGHT FULLSCREEN LEAFLET MAP -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[78vh]">
+        
+        <!-- LEFT COLUMN: VICTIM ROSTER & FILTERS (4 Cols) -->
+        <div class="lg:col-span-4 flex flex-col glass-panel rounded-2xl border border-slate-800 overflow-hidden h-full">
+          
+          <!-- Search & Filter Controls -->
+          <div class="p-3.5 border-b border-slate-800 space-y-2.5 bg-slate-950/40">
+            <div class="relative">
+              <i class="fas fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
+              <input id="victim-search-input" type="text" placeholder="Search by victim name, landmark, phone..." class="w-full bg-slate-900 border border-slate-700/80 rounded-lg pl-8 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono">
+            </div>
+
+            <div class="flex items-center gap-2">
+              <select id="victim-filter-select" class="flex-1 bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-400 font-mono">
+                <option value="ALL">Show All Priorities</option>
+                <option value="CRITICAL">Critical Threats (Red)</option>
+                <option value="PENDING">Pending Drone Dispatch</option>
+                <option value="ASSIGNED">Drone En Route</option>
+                <option value="RESCUED">Safely Rescued (Green)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Scrollable Victim Cards Roster -->
+          <div id="victim-list-container" class="flex-1 overflow-y-auto p-3 space-y-2">
+            <!-- Dynamically populated by tracking.js -->
+          </div>
+
+          <!-- Bottom Footer Info -->
+          <div class="p-2.5 border-t border-slate-800 bg-slate-950/60 text-[10px] font-mono text-slate-400 flex items-center justify-between">
+            <span><i class="fas fa-circle-dot text-emerald-400 mr-1"></i> Auto-synced to Cloud</span>
+            <span>Click victim card to locate</span>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: FULLSCREEN LEAFLET GIS MAP (8 Cols) -->
+        <div class="lg:col-span-8 flex flex-col glass-panel rounded-2xl border border-slate-800 overflow-hidden relative h-full">
+          
+          <!-- Tactical Map Header & Legend Overlay -->
+          <div class="absolute top-3 left-3 z-[1000] bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-mono shadow-xl flex items-center gap-3 pointer-events-auto">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span> Critical SOS</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Drone En Route</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Rescued</span>
+            <span class="hidden sm:flex items-center gap-1.5"><i class="fas fa-campground text-cyan-400"></i> Shelter</span>
+          </div>
+
+          <!-- Map Container -->
+          <div id="victim-tracking-map" class="w-full h-full z-0"></div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 4. DRONE COMMAND CENTER PAGE VIEW         -->
+    <!-- ========================================== -->
+    <section id="drones" class="space-y-6 hidden">
+      <!-- Section wrapper for anchor compatibility -->
+    </section>
+    <section id="view-drones" class="space-y-6 hidden">
+      
+      <!-- Top Title Bar -->
+      <div class="glass-panel p-5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="px-2 py-0.5 rounded text-[10px] font-hud bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 uppercase">TACTICAL AIRSPACE</span>
+            <span class="text-xs text-slate-400 font-mono">LoRa Transceiver 915 MHz • 15km Range</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-hud font-bold text-white">Autonomous Drone Command Center</h2>
+          <p class="text-xs sm:text-sm text-slate-300">Fleet telemetry, live waypoint navigation, payload delivery, and airborne LoRa SOS packet sniffing.</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="window.droneCommand.deployDrone()" class="px-3.5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-hud font-bold transition flex items-center gap-1.5 shadow-md shadow-cyan-600/30">
+            <i class="fas fa-paper-plane"></i> Deploy Drone
+          </button>
+          <button onclick="window.droneCommand.scanArea()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-700">
+            <i class="fas fa-radar"></i> Scan Area
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 DRONE FLEET STATUS CARDS -->
+      <div id="drone-fleet-cards-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Dynamically rendered by drones.js -->
+      </div>
+
+      <!-- DUAL DISPLAY: LIVE RECON VIDEO HUD & ANIMATED FLIGHT MAP -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        
+        <!-- LEFT: LIVE AERIAL RECON FEED WITH TACTICAL HUD (6 Cols) -->
+        <div class="lg:col-span-6 glass-panel rounded-2xl border border-slate-800 p-4 flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
+              <span class="text-xs font-hud font-bold text-white uppercase tracking-wider">LIVE AERIAL FEED • 4K GIMBAL</span>
+              <span class="text-[10px] font-mono text-slate-400">LATENCY: 42ms</span>
+            </div>
+            <button id="thermal-toggle-btn" onclick="window.droneCommand.toggleThermalMode()" class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:text-white text-xs font-mono transition border border-slate-700 flex items-center gap-1">
+              <i class="fas fa-eye text-xs"></i> FLIR Thermal Mode
+            </button>
+          </div>
+
+          <!-- Video Player with Tactical HUD Overlay -->
+          <div class="relative w-full aspect-video rounded-xl overflow-hidden bg-slate-950 border border-slate-700 flex items-center justify-center">
+            
+            <!-- YouTube Disaster Aerial Reconnaissance Embedded Stream -->
+            <iframe id="drone-video-viewport" class="w-full h-full object-cover transition-all duration-300" src="https://www.youtube-nocookie.com/embed/P_PqgL_nZ9A?autoplay=1&mute=1&controls=0&loop=1&playlist=P_PqgL_nZ9A" title="Disaster Drone Aerial Reconnaissance" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+            <!-- TACTICAL HUD OVERLAY -->
+            <div class="absolute inset-0 pointer-events-none p-3 flex flex-col justify-between font-mono text-xs text-cyan-400 select-none">
+              
+              <!-- HUD Corners -->
+              <div class="hud-corner hud-corner-tl"></div>
+              <div class="hud-corner hud-corner-tr"></div>
+              <div class="hud-corner hud-corner-bl"></div>
+              <div class="hud-corner hud-corner-br"></div>
+
+              <!-- Top Telemetry Tape -->
+              <div class="flex items-center justify-between text-[11px] bg-slate-950/70 backdrop-blur-sm px-2 py-1 rounded border border-cyan-800/40">
+                <span class="flex items-center gap-1.5"><span class="text-red-500 font-bold">● REC</span> 00:14:28</span>
+                <span id="hud-drone-id" class="text-white font-bold">DRONE ALPHA-1</span>
+                <span id="hud-live-coords" class="text-cyan-300">13.0645° N, 80.2540° E</span>
+              </div>
+
+              <!-- Center Reticle / Pitch Crosshair -->
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="w-24 h-24 border border-cyan-400/30 rounded-full flex items-center justify-center">
+                  <div class="w-2 h-2 rounded-full bg-cyan-400"></div>
+                </div>
+                <div class="absolute w-12 h-[1px] bg-cyan-400"></div>
+                <div class="absolute h-12 w-[1px] bg-cyan-400"></div>
+              </div>
+
+              <!-- Bottom HUD Gauges -->
+              <div class="flex items-center justify-between text-[11px] bg-slate-950/70 backdrop-blur-sm px-2.5 py-1 rounded border border-cyan-800/40">
+                <span>ALT: <strong id="hud-live-alt" class="text-white">125 M</strong></span>
+                <span>SPD: <strong id="hud-live-spd" class="text-white">44 KM/H</strong></span>
+                <span>HDG: <strong id="hud-live-heading" class="text-cyan-300">142° SE</strong></span>
+                <span>BATT: <strong id="hud-live-battery" class="text-emerald-400">85%</strong></span>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Tactical Mission Controls Toolbar -->
+          <div class="grid grid-cols-4 gap-2 mt-3 pt-3 border-t border-slate-800">
+            <button onclick="window.droneCommand.deployDrone()" class="py-2 px-1 bg-cyan-900/60 hover:bg-cyan-800 text-cyan-200 rounded-lg text-xs font-hud font-bold transition text-center border border-cyan-700/50">
+              <i class="fas fa-play text-[10px] block mb-0.5"></i> Deploy Drone
+            </button>
+            <button onclick="window.droneCommand.triggerPayloadDrop()" class="py-2 px-1 bg-red-900/60 hover:bg-red-800 text-red-200 rounded-lg text-xs font-hud font-bold transition text-center border border-red-700/50">
+              <i class="fas fa-parachute-box text-[10px] block mb-0.5"></i> Deliver Kit
+            </button>
+            <button onclick="window.droneCommand.scanArea()" class="py-2 px-1 bg-purple-900/60 hover:bg-purple-800 text-purple-200 rounded-lg text-xs font-hud font-bold transition text-center border border-purple-700/50">
+              <i class="fas fa-radar text-[10px] block mb-0.5"></i> Scan Area
+            </button>
+            <button onclick="window.droneCommand.returnToBase()" class="py-2 px-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-hud font-bold transition text-center border border-slate-700">
+              <i class="fas fa-house-chimney text-[10px] block mb-0.5"></i> Return (RTL)
+            </button>
+          </div>
+
+        </div>
+
+        <!-- RIGHT: ANIMATED DRONE FLIGHT PATH ON LEAFLET MAP (6 Cols) -->
+        <div class="lg:col-span-6 glass-panel rounded-2xl border border-slate-800 p-4 flex flex-col h-[460px] lg:h-auto">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <i class="fas fa-route text-cyan-400"></i>
+              <span class="text-xs font-hud font-bold text-white uppercase tracking-wider">ANIMATED FLIGHT PATH & WAYPOINTS</span>
+            </div>
+            <span class="text-[10px] font-mono text-cyan-300 px-2 py-0.5 bg-cyan-950 rounded border border-cyan-800">
+              LoRa Radius: 1.2 km
+            </span>
+          </div>
+
+          <!-- Map Container -->
+          <div class="flex-1 w-full rounded-xl overflow-hidden relative border border-slate-700 min-h-[340px]">
+            <div id="drone-command-map" class="w-full h-full"></div>
+
+            <!-- Radar Sweep Overlay -->
+            <div id="drone-radar-sweep-overlay" class="hidden absolute inset-0 z-[1000] pointer-events-none flex items-center justify-center overflow-hidden">
+              <div class="radar-beam"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- OFFLINE LORA PACKET INTERCEPTOR STREAM -->
+      <div class="glass-panel p-5 rounded-2xl border border-slate-800">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
+          <div>
+            <h3 class="text-base font-hud font-bold text-white flex items-center gap-2">
+              <i class="fas fa-satellite-dish text-cyan-400"></i>
+              Airborne LoRa SOS Packet Interceptor (915.2 MHz)
+            </h3>
+            <p class="text-xs text-slate-400">Drone hexacopter acting as an airborne gateway, decoding offline SOS beacons transmitted from ground ESP32/Smartphone mesh nodes.</p>
+          </div>
+          <span class="px-2.5 py-1 rounded text-xs font-mono bg-emerald-950 text-emerald-300 border border-emerald-500/40">
+            Link Quality: 98%
+          </span>
+        </div>
+
+        <div id="drone-lora-packets-container" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <!-- Dynamically populated by drones.js -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 5. OFFLINE SOS & MESH NETWORK PAGE VIEW   -->
+    <!-- ========================================== -->
+    <section id="mesh" class="space-y-6 hidden">
+      <!-- Section wrapper for anchor compatibility -->
+    </section>
+    <section id="view-mesh" class="space-y-6 hidden">
+      
+      <!-- Top Title & Architecture Banner -->
+      <div class="glass-panel p-6 rounded-2xl border border-slate-800">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-2">
+          <div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-hud bg-purple-500/20 text-purple-300 border border-purple-500/40 uppercase">STORE-AND-FORWARD PROTOCOL</span>
+            <h2 class="text-2xl sm:text-3xl font-hud font-bold text-white mt-1">Offline SOS & Multi-Hop Mesh Network</h2>
+            <p class="text-xs sm:text-sm text-slate-300">How Rescue-Net transmits life-saving coordinates when cellular cell towers and internet are completely down.</p>
+          </div>
+
+          <!-- Interactive Test Offline Mode Demo Button -->
+          <button id="test-offline-btn" onclick="window.meshSimulator.testOfflineMode()" class="px-5 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-hud font-bold text-xs uppercase tracking-wider shadow-lg shadow-amber-600/30 transition flex items-center gap-2 shrink-0">
+            <i class="fas fa-wifi"></i> TEST OFFLINE MODE (SIMULATE CELL OUTAGE)
+          </button>
+        </div>
+
+        <!-- Simulation state text -->
+        <div id="offline-simulation-status" class="mt-3 text-xs font-mono">
+          <span class="text-emerald-400"><i class="fas fa-check-circle mr-1"></i> Network Available: Auto-Sync Ready</span>
+        </div>
+      </div>
+
+      <!-- VISUAL ANIMATION: STORE-AND-FORWARD 4-STEP PIPELINE -->
+      <div class="glass-panel p-6 rounded-2xl border border-slate-800">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <span id="mesh-step-badge" class="px-2.5 py-1 text-xs font-hud rounded bg-cyan-950 text-cyan-300 border border-cyan-700/50">
+              STEP 1: DEAD CELLULAR ZONE
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="window.meshSimulator.setAnimationStep(0)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs transition">
+              Step 1
+            </button>
+            <button onclick="window.meshSimulator.setAnimationStep(1)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs transition">
+              Step 2
+            </button>
+            <button onclick="window.meshSimulator.setAnimationStep(2)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs transition">
+              Step 3
+            </button>
+            <button onclick="window.meshSimulator.setAnimationStep(3)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs transition">
+              Step 4
+            </button>
+            <button onclick="window.meshSimulator.nextAnimationStep()" class="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded text-xs font-bold transition">
+              Next <i class="fas fa-chevron-right ml-1 text-[10px]"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Interactive Node Graph Topology -->
+        <div class="relative py-8 px-4 bg-slate-950/60 rounded-xl border border-slate-800/80 overflow-hidden">
+          
+          <!-- SVG Connecting Transmission Beams -->
+          <svg class="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+            <line id="mesh-line-1" x1="12%" y1="50%" x2="38%" y2="50%" class="stroke-slate-700 stroke-[1.5px] transition-all duration-500" stroke-dasharray="6 6"/>
+            <line id="mesh-line-2" x1="38%" y1="50%" x2="63%" y2="50%" class="stroke-slate-700 stroke-[1.5px] transition-all duration-500" stroke-dasharray="6 6"/>
+            <line id="mesh-line-3" x1="63%" y1="50%" x2="88%" y2="50%" class="stroke-slate-700 stroke-[1.5px] transition-all duration-500" stroke-dasharray="6 6"/>
+          </svg>
+
+          <!-- 4 Node Cards -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
+            
+            <!-- Node 1: Victim Phone -->
+            <div id="mesh-node-1" class="glass-panel p-4 rounded-xl border border-cyan-400 shadow-lg shadow-cyan-500/50 scale-105 transition-all duration-300 text-center flex flex-col items-center">
+              <div class="w-14 h-14 rounded-2xl bg-red-600/30 text-red-400 border border-red-500 flex items-center justify-center text-2xl mb-2">
+                <i class="fas fa-mobile-screen"></i>
+              </div>
+              <h4 class="font-bold text-white text-sm">1. Victim Phone</h4>
+              <p class="text-[11px] text-slate-400 mt-1">Dead Tower Zone</p>
+              <span class="mt-2 text-[9px] font-mono px-2 py-0.5 rounded bg-slate-800 text-red-300 border border-red-800">
+                Outbox Encrypted
+              </span>
+            </div>
+
+            <!-- Node 2: Volunteer Peer Phone -->
+            <div id="mesh-node-2" class="glass-panel p-4 rounded-xl border border-slate-700 opacity-60 transition-all duration-300 text-center flex flex-col items-center">
+              <div class="w-14 h-14 rounded-2xl bg-purple-600/30 text-purple-400 border border-purple-500 flex items-center justify-center text-2xl mb-2">
+                <i class="fas fa-people-arrows"></i>
+              </div>
+              <h4 class="font-bold text-white text-sm">2. Peer Volunteer</h4>
+              <p class="text-[11px] text-slate-400 mt-1">Bluetooth / Ad-hoc</p>
+              <span class="mt-2 text-[9px] font-mono px-2 py-0.5 rounded bg-slate-800 text-purple-300 border border-purple-800">
+                Store-and-Forward
+              </span>
+            </div>
+
+            <!-- Node 3: LoRa Drone Relay -->
+            <div id="mesh-node-3" class="glass-panel p-4 rounded-xl border border-slate-700 opacity-60 transition-all duration-300 text-center flex flex-col items-center">
+              <div class="w-14 h-14 rounded-2xl bg-cyan-600/30 text-cyan-400 border border-cyan-500 flex items-center justify-center text-2xl mb-2">
+                <i class="fas fa-helicopter"></i>
+              </div>
+              <h4 class="font-bold text-white text-sm">3. LoRa Drone</h4>
+              <p class="text-[11px] text-slate-400 mt-1">150m AGL Gateway</p>
+              <span class="mt-2 text-[9px] font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-300 border border-cyan-800">
+                LoRa 915 MHz
+              </span>
+            </div>
+
+            <!-- Node 4: Base Station Command HQ -->
+            <div id="mesh-node-4" class="glass-panel p-4 rounded-xl border border-slate-700 opacity-60 transition-all duration-300 text-center flex flex-col items-center">
+              <div class="w-14 h-14 rounded-2xl bg-emerald-600/30 text-emerald-400 border border-emerald-500 flex items-center justify-center text-2xl mb-2">
+                <i class="fas fa-satellite"></i>
+              </div>
+              <h4 class="font-bold text-white text-sm">4. Rescue HQ</h4>
+              <p class="text-[11px] text-slate-400 mt-1">Satellite & Cloud</p>
+              <span class="mt-2 text-[9px] font-mono px-2 py-0.5 rounded bg-slate-800 text-emerald-300 border border-emerald-800">
+                Mission Dispatched
+              </span>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Step Explanation Text -->
+        <div class="mt-4 p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+          <h4 id="mesh-step-title" class="text-base font-bold text-white mb-1">Victim Generates Offline SOS Packet</h4>
+          <p id="mesh-step-desc" class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            Cellular towers are submerged or without power. Victim's phone generates an encrypted, lightweight JSON beacon (<200 bytes) containing GPS, triage priority, and timestamp, storing it in local flash memory.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- 2 COLUMNS: WEB BLUETOOTH DEMO & OFFLINE OUTBOX -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        
+        <!-- WEB BLUETOOTH API CONCEPT & SCANNER -->
+        <div class="glass-panel p-5 rounded-2xl border border-slate-800">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-base font-hud font-bold text-white flex items-center gap-2">
+                <i class="fab fa-bluetooth-b text-cyan-400"></i>
+                Web Bluetooth API Mesh Scanner
+              </h3>
+              <p class="text-xs text-slate-400">Scans 2.4 GHz spectrum for nearby ESP32/LoRa hardware relay nodes.</p>
+            </div>
+          </div>
+
+          <p class="text-xs text-slate-300 mb-4 leading-relaxed">
+            In disaster environments where browsers run offline, the <strong>Web Bluetooth API</strong> connects directly to handheld ESP32 transceivers and peer phones, enabling peer-to-peer data interchange without internet access.
+          </p>
+
+          <button onclick="window.meshSimulator.scanForBluetoothMeshNodes()" class="w-full py-2.5 bg-cyan-700 hover:bg-cyan-600 text-white rounded-xl text-xs font-hud font-bold transition flex items-center justify-center gap-2 shadow-sm mb-4">
+            <i class="fab fa-bluetooth"></i> Scan 2.4GHz BLE Spectrum
+          </button>
+
+          <!-- Bluetooth Scan Results Container -->
+          <div id="bluetooth-scan-results" class="space-y-2">
+            <div class="p-3 bg-slate-900/60 border border-slate-800 rounded-lg text-xs font-mono text-slate-400 text-center">
+              Click scan to discover local Rescue-Net Bluetooth beacons.
+            </div>
+          </div>
+        </div>
+
+        <!-- OFFLINE OUTBOX INSPECTOR (LOCALSTORAGE BACKED) -->
+        <div class="glass-panel p-5 rounded-2xl border border-slate-800 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h3 class="text-base font-hud font-bold text-white flex items-center gap-2">
+                  <i class="fas fa-boxes-packing text-amber-400"></i>
+                  Offline Outbox & Mesh Cache
+                </h3>
+                <p class="text-xs text-slate-400">Packets stored in browser localStorage waiting for network/drone relay.</p>
+              </div>
+              <span id="offline-outbox-count" class="px-2.5 py-0.5 rounded text-xs font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 hidden">
+                0
+              </span>
+            </div>
+
+            <!-- Outbox Packets List -->
+            <div id="offline-outbox-container" class="max-h-60 overflow-y-auto pr-1">
+              <!-- Dynamically populated by mesh.js -->
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-slate-800 mt-4 flex items-center justify-between text-xs font-mono">
+            <span class="text-slate-400">Protocol: ESP-NOW + LoRa WAN</span>
+            <button onclick="window.RescueDB.syncOfflineQueue(); window.meshSimulator.renderOfflineOutbox();" class="px-3 py-1.5 bg-cyan-700 hover:bg-cyan-600 text-white rounded text-xs font-bold transition">
+              <i class="fas fa-sync mr-1"></i> Force Mesh Sync
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 6. SHELTER & MEDICAL MANAGEMENT PAGE VIEW -->
+    <!-- ========================================== -->
+    <section id="shelters" class="space-y-6 hidden">
+      <!-- Section wrapper for anchor compatibility -->
+    </section>
+    <section id="view-shelters" class="space-y-6 hidden">
+      
+      <!-- Top Title & Global Capacity Stats -->
+      <div class="glass-panel p-6 rounded-2xl border border-slate-800">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 pb-6 border-b border-slate-800">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2 py-0.5 rounded text-[10px] font-hud bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 uppercase">LOGISTICS & EVACUATION</span>
+              <span class="text-xs text-slate-400 font-mono">Real-Time Bed & Medical Inventory</span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-hud font-bold text-white">Disaster Relief Shelters & Medical Hubs</h2>
+            <p class="text-xs sm:text-sm text-slate-300">Live evacuation centers with turn-by-turn Google Maps navigation, bed occupancy, food rations, and trauma kits.</p>
+          </div>
+
+          <!-- Add Shelter Trigger for Rescue Officers -->
+          <button onclick="window.shelterSystem.openAddShelterModal()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-hud font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/30 shrink-0">
+            <i class="fas fa-plus"></i> Register New Shelter
+          </button>
+        </div>
+
+        <!-- Global Summary Metrics -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+          <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+            <span class="text-slate-400 block text-[10px] uppercase">REGISTERED SHELTERS</span>
+            <div id="shelter-count-header" class="text-white font-bold text-base">4 Camps</div>
+          </div>
+          <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+            <span class="text-slate-400 block text-[10px] uppercase">AVAILABLE BEDS</span>
+            <div id="shelter-total-free-beds" class="text-emerald-400 font-bold text-base">495 Beds Open</div>
+          </div>
+          <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+            <span class="text-slate-400 block text-[10px] uppercase">TRAUMA DOCTORS</span>
+            <div id="shelter-total-doctors" class="text-cyan-400 font-bold text-base">29 Doctors On Site</div>
+          </div>
+          <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+            <span class="text-slate-400 block text-[10px] uppercase">DRINKING WATER RESERVE</span>
+            <div class="text-cyan-300 font-bold text-base">30,200 Litres</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Search & Amenity Filters -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="relative w-full sm:w-80">
+          <i class="fas fa-magnifying-glass absolute left-3 top-3 text-xs text-slate-500"></i>
+          <input id="shelter-search-input" type="text" placeholder="Search shelters by name, area, or tag..." class="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono">
+        </div>
+
+        <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+          <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none bg-slate-900 px-3 py-2 rounded-xl border border-slate-800">
+            <input type="checkbox" id="shelter-filter-available" class="accent-emerald-500 rounded">
+            <span>Show Only Shelters With Free Beds</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- SHELTER CARDS GRID -->
+      <div id="shelters-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Dynamically rendered by shelters.js -->
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- EMERGENCY FOOTER                          -->
+  <!-- ========================================== -->
+  <footer class="bg-[#0F172A] border-t border-slate-800 text-slate-400 text-xs mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      
+      <!-- Top Row: Emergency Contact Hotline Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <a href="tel:112" class="p-3 bg-red-950/40 hover:bg-red-950/70 border border-red-700/50 rounded-xl transition flex items-center gap-3 group">
+          <div class="w-10 h-10 rounded-lg bg-red-600 text-white flex items-center justify-center font-bold text-base shrink-0 group-hover:scale-105 transition">
+            112
+          </div>
+          <div>
+            <span class="text-white font-bold block text-sm">National Emergency</span>
+            <span class="text-[10px] text-slate-400">Police / Fire / Rescue</span>
+          </div>
+        </a>
+
+        <a href="tel:1078" class="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl transition flex items-center gap-3 group">
+          <div class="w-10 h-10 rounded-lg bg-cyan-600 text-white flex items-center justify-center font-bold text-base shrink-0 group-hover:scale-105 transition">
+            1078
+          </div>
+          <div>
+            <span class="text-white font-bold block text-sm">NDMA Helpline</span>
+            <span class="text-[10px] text-slate-400">Disaster Management</span>
+          </div>
+        </a>
+
+        <a href="tel:108" class="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl transition flex items-center gap-3 group">
+          <div class="w-10 h-10 rounded-lg bg-amber-600 text-white flex items-center justify-center font-bold text-base shrink-0 group-hover:scale-105 transition">
+            108
+          </div>
+          <div>
+            <span class="text-white font-bold block text-sm">Medical Ambulance</span>
+            <span class="text-[10px] text-slate-400">Emergency Trauma Care</span>
+          </div>
+        </a>
+
+        <a href="tel:1070" class="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl transition flex items-center gap-3 group">
+          <div class="w-10 h-10 rounded-lg bg-purple-600 text-white flex items-center justify-center font-bold text-base shrink-0 group-hover:scale-105 transition">
+            1070
+          </div>
+          <div>
+            <span class="text-white font-bold block text-sm">State Relief Desk</span>
+            <span class="text-[10px] text-slate-400">Evacuation & Floods</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Middle: Project Info & Tech Stack Badges -->
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-slate-800">
+        <div>
+          <h4 class="text-white font-hud font-bold text-base flex items-center gap-2">
+            <span>Rescue-Net</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-300">Final Year Capstone Project</span>
+          </h4>
+          <p class="text-xs text-slate-400 mt-1 max-w-xl">
+            Designed for humanitarian rescue coordination in communication-denied environments using Leaflet GIS, OpenStreetMap, Firebase Firestore, Web Audio API, and LoRa mesh simulation.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="px-2 py-1 rounded bg-slate-900 border border-slate-800 text-[11px] font-mono text-slate-300">HTML5 / Vanilla JS</span>
+          <span class="px-2 py-1 rounded bg-slate-900 border border-slate-800 text-[11px] font-mono text-cyan-300">Tailwind CSS</span>
+          <span class="px-2 py-1 rounded bg-slate-900 border border-slate-800 text-[11px] font-mono text-emerald-300">Leaflet.js & OSM</span>
+          <span class="px-2 py-1 rounded bg-slate-900 border border-slate-800 text-[11px] font-mono text-amber-300">Firebase Firestore</span>
+          <span class="px-2 py-1 rounded bg-slate-900 border border-slate-800 text-[11px] font-mono text-purple-300">PWA Offline</span>
+        </div>
+      </div>
+
+      <!-- Copyright -->
+      <div class="text-center text-[11px] text-slate-500 pt-4 border-t border-slate-800">
+        &copy; 2026 Rescue-Net - AI-Powered Natural Disaster Management System. For educational & disaster relief evaluation purposes.
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- ========================================== -->
+  <!-- MOBILE BOTTOM QUICK NAVIGATION BAR         -->
+  <!-- ========================================== -->
+  <div class="fixed bottom-0 left-0 right-0 z-40 bg-[#0F172A]/95 backdrop-blur-xl border-t border-slate-800 flex lg:hidden items-center justify-around py-2 px-1 text-[10px] font-mono">
+    <a href="#home" class="mobile-nav-btn flex flex-col items-center gap-0.5 text-slate-400 hover:text-cyan-400" data-route="home">
+      <i class="fas fa-house-chimney text-base"></i>
+      <span>Home</span>
+    </a>
+    <a href="#warning" class="mobile-nav-btn flex flex-col items-center gap-0.5 text-slate-400 hover:text-cyan-400" data-route="warning">
+      <i class="fas fa-triangle-exclamation text-base"></i>
+      <span>Warning</span>
+    </a>
+    <button onclick="window.sosManager.handleQuickSOSClick()" class="flex flex-col items-center justify-center -mt-5 w-12 h-12 rounded-full bg-red-600 text-white shadow-lg shadow-red-600/50 border-2 border-white animate-sos-pulse">
+      <i class="fas fa-tower-broadcast text-lg"></i>
+    </button>
+    <a href="#tracking" class="mobile-nav-btn flex flex-col items-center gap-0.5 text-slate-400 hover:text-cyan-400" data-route="tracking">
+      <i class="fas fa-map-location-dot text-base"></i>
+      <span>Tracking</span>
+    </a>
+    <a href="#drones" class="mobile-nav-btn flex flex-col items-center gap-0.5 text-slate-400 hover:text-cyan-400" data-route="drones">
+      <i class="fas fa-helicopter text-base"></i>
+      <span>Drones</span>
+    </a>
+    <a href="#shelters" class="mobile-nav-btn flex flex-col items-center gap-0.5 text-slate-400 hover:text-cyan-400" data-route="shelters">
+      <i class="fas fa-campground text-base"></i>
+      <span>Shelters</span>
+    </a>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODALS & DIALOGS                          -->
+  <!-- ========================================== -->
+
+  <!-- 1. DETAILED SOS TRIAGE MODAL -->
+  <div id="sos-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-panel-glow border-red-500 rounded-2xl max-w-lg w-full p-6 relative max-h-[90vh] overflow-y-auto">
+      <button onclick="window.sosManager.closeSOSModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-lg">
+          <i class="fas fa-tower-broadcast"></i>
+        </div>
+        <div>
+          <h3 class="text-xl font-hud font-bold text-white">Emergency SOS Broadcast</h3>
+          <p class="text-xs text-slate-300">Auto-transmits GPS location to autonomous drones & rescue units</p>
+        </div>
+      </div>
+
+      <form id="sos-detailed-form" class="space-y-3.5 text-xs font-mono">
+        <div>
+          <label class="block text-slate-400 mb-1">YOUR FULL NAME / CONTACT IDENTIFIER</label>
+          <input id="sos-name" type="text" required placeholder="e.g. Ramesh Kumar" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-slate-400 mb-1">PHONE / RADIO ID</label>
+            <input id="sos-phone" type="text" placeholder="+91 98401 00000" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">NUMBER OF PEOPLE</label>
+            <input id="sos-people" type="number" min="1" max="50" value="1" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1">PRIMARY DISASTER EMERGENCY TYPE</label>
+          <select id="sos-emergency-type" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500">
+            <option value="Water Level Rising - Rooftop Stranded">Water Level Rising - Rooftop Stranded</option>
+            <option value="Trapped Under Debris / Building Collapse">Trapped Under Debris / Building Collapse</option>
+            <option value="Severe Trauma / Compound Fracture">Severe Trauma / Compound Fracture / Bleeding</option>
+            <option value="Medical Need (Insulin / Dialysis / Oxygen)">Medical Need (Insulin / Dialysis / Oxygen)</option>
+            <option value="Elderly / Pediatric Evacuation Needed">Elderly / Pediatric Evacuation Needed</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1">MEDICAL & TRIAGE NOTES</label>
+          <input id="sos-medical" type="text" placeholder="e.g. 1 elderly person, need drinking water & first aid" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-slate-400 mb-1">GPS LATITUDE</label>
+            <input id="sos-lat-input" type="text" readonly class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-emerald-400 font-bold">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">GPS LONGITUDE</label>
+            <input id="sos-lng-input" type="text" readonly class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-emerald-400 font-bold">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1">LANDMARK / ROOFTOP COLOR</label>
+          <input id="sos-landmark" type="text" placeholder="e.g. Blue terrace, near water tank Sector 4" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500">
+        </div>
+
+        <div class="p-3 bg-red-950/40 border border-red-800 rounded-lg text-[11px] text-slate-300">
+          <i class="fas fa-shield-halved text-red-400 mr-1"></i>
+          <strong>Offline Guarantee:</strong> If internet fails, your distress packet will be saved in device memory and transmitted via LoRa / Bluetooth Mesh.
+        </div>
+
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="window.sosManager.closeSOSModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold">
+            Cancel
+          </button>
+          <button type="submit" class="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl font-hud font-bold uppercase tracking-wider shadow-lg shadow-red-600/40">
+            Transmit SOS Now
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. OFFLINE SUCCESS QUEUE MODAL -->
+  <div id="offline-success-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div id="offline-success-modal-content" class="glass-panel border-amber-500/80 rounded-2xl max-w-md w-full p-6">
+      <!-- Populated dynamically by sos.js -->
+    </div>
+  </div>
+
+  <!-- 3. ASSIGN DRONE MODAL -->
+  <div id="assign-drone-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-panel-cyan rounded-2xl max-w-md w-full p-6">
+      <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
+        <h3 class="text-lg font-hud font-bold text-white flex items-center gap-2">
+          <i class="fas fa-helicopter text-cyan-400"></i> Dispatch Autonomous Drone
+        </h3>
+        <button onclick="window.victimTracking.closeAssignDroneModal()" class="text-slate-400 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="bg-slate-900/90 rounded-lg p-3 text-xs font-mono mb-4 border border-slate-700 space-y-1">
+        <p class="text-slate-400">Target Victim: <strong id="assign-drone-victim-name" class="text-white">Rajesh Kumar</strong></p>
+        <p class="text-slate-400">Emergency: <strong id="assign-drone-victim-emergency" class="text-red-400">Trauma</strong></p>
+        <p class="text-slate-400">Coordinates: <strong id="assign-drone-victim-gps" class="text-cyan-400">13.0827, 80.2707</strong></p>
+      </div>
+
+      <form id="assign-drone-form" class="space-y-3 text-xs font-mono">
+        <div>
+          <label class="block text-slate-400 mb-1">SELECT AVAILABLE DRONE FLEET UNIT</label>
+          <select id="assign-drone-select" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-400">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1">MISSION DIRECTIVE</label>
+          <select id="assign-mission-type" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-400">
+            <option value="EMERGENCY_DROP">Deliver First Aid / Trauma Payload</option>
+            <option value="AIRBORNE_RECON">Airborne Visual Reconnaissance & Spotting</option>
+            <option value="LORA_GATEWAY">Hover as LoRa Communications Relay</option>
+            <option value="LIFE_JACKET_DROP">Deploy Inflatable Lifebuoy / Flotation</option>
+          </select>
+        </div>
+
+        <div class="pt-3 flex gap-2">
+          <button type="button" onclick="window.victimTracking.closeAssignDroneModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold">
+            Cancel
+          </button>
+          <button type="submit" class="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-hud font-bold uppercase tracking-wider">
+            Confirm Launch
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. ADD SHELTER MODAL -->
+  <div id="add-shelter-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-panel border-emerald-500 rounded-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
+        <h3 class="text-lg font-hud font-bold text-white flex items-center gap-2">
+          <i class="fas fa-campground text-emerald-400"></i> Register Disaster Relief Shelter
+        </h3>
+        <button onclick="window.shelterSystem.closeAddShelterModal()" class="text-slate-400 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form id="add-shelter-form" class="space-y-3 text-xs font-mono">
+        <div>
+          <label class="block text-slate-400 mb-1">SHELTER / CAMP NAME</label>
+          <input id="new-shelter-name" type="text" required placeholder="e.g. Government Higher Secondary School Safe Camp" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1">STREET ADDRESS & LANDMARK</label>
+          <input id="new-shelter-address" type="text" required placeholder="e.g. Anna Salai, Guindy Sector" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-slate-400 mb-1">LATITUDE</label>
+            <input id="new-shelter-lat" type="number" step="0.0001" value="13.0827" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">LONGITUDE</label>
+            <input id="new-shelter-lng" type="number" step="0.0001" value="80.2707" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-slate-400 mb-1">TOTAL BED CAPACITY</label>
+            <input id="new-shelter-capacity" type="number" value="400" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">CURRENTLY OCCUPIED</label>
+            <input id="new-shelter-occupied" type="number" value="50" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-slate-400 mb-1">FOOD (DAYS)</label>
+            <input id="new-shelter-food" type="number" value="5" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">TRAUMA KITS</label>
+            <input id="new-shelter-med" type="number" value="150" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">DOCTORS</label>
+            <input id="new-shelter-doctors" type="number" value="4" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+          </div>
+        </div>
+
+        <div class="pt-3 flex gap-2">
+          <button type="button" onclick="window.shelterSystem.closeAddShelterModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold">
+            Cancel
+          </button>
+          <button type="submit" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-hud font-bold uppercase tracking-wider">
+            Save Shelter
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. EDIT SHELTER SUPPLIES MODAL -->
+  <div id="edit-shelter-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-panel border-cyan-500 rounded-2xl max-w-md w-full p-6">
+      <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
+        <h3 id="edit-shelter-title" class="text-base font-hud font-bold text-white">Update Shelter Resources</h3>
+        <button onclick="window.shelterSystem.closeEditShelterModal()" class="text-slate-400 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form id="edit-shelter-form" class="space-y-3 text-xs font-mono">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-slate-400 mb-1">TOTAL CAPACITY</label>
+            <input id="edit-shelter-capacity" type="number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">OCCUPIED BEDS</label>
+            <input id="edit-shelter-occupied" type="number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-slate-400 mb-1">FOOD RATIONS (DAYS)</label>
+            <input id="edit-shelter-food" type="number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">TRAUMA KITS</label>
+            <input id="edit-shelter-med" type="number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-slate-400 mb-1">DRINKING WATER (L)</label>
+            <input id="edit-shelter-water" type="number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">DOCTORS ON-SITE</label>
+            <input id="edit-shelter-doctors" type="number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+          </div>
+        </div>
+
+        <div class="pt-3 flex gap-2">
+          <button type="button" onclick="window.shelterSystem.closeEditShelterModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold">
+            Cancel
+          </button>
+          <button type="submit" class="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-hud font-bold uppercase tracking-wider">
+            Update Now
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 6. USER AUTHENTICATION MODAL -->
+  <div id="auth-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-panel border-cyan-500/80 rounded-2xl max-w-md w-full p-6">
+      <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
+        <h3 class="text-lg font-hud font-bold text-white flex items-center gap-2">
+          <i class="fas fa-user-shield text-cyan-400"></i> Rescue-Net Authentication
+        </h3>
+        <button onclick="window.appRouter.closeAuthModal()" class="text-slate-400 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-300 mb-4">
+        Select your role to access role-based capabilities (Drone dispatching, Shelter management, or Victim SOS reporting):
+      </p>
+
+      <!-- 1-Click Demo Login Buttons (College Viva Ready!) -->
+      <div class="space-y-3 mb-4">
+        <button onclick="window.appRouter.loginAs('COMMANDER')" class="w-full p-3.5 bg-gradient-to-r from-red-900/60 to-red-800/80 hover:from-red-800 hover:to-red-700 border border-red-500 rounded-xl text-left transition flex items-center justify-between group">
+          <div>
+            <div class="text-xs font-hud font-bold text-white uppercase flex items-center gap-1.5">
+              <i class="fas fa-shield-halved text-red-400"></i> NDRF Incident Commander
+            </div>
+            <p class="text-[11px] text-slate-300 mt-0.5">Full access: Drone fleet dispatch, shelter edits, triage command</p>
+          </div>
+          <i class="fas fa-arrow-right text-red-400 group-hover:translate-x-1 transition text-xs"></i>
+        </button>
+
+        <button onclick="window.appRouter.loginAs('VICTIM')" class="w-full p-3.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl text-left transition flex items-center justify-between group">
+          <div>
+            <div class="text-xs font-hud font-bold text-white uppercase flex items-center gap-1.5">
+              <i class="fas fa-person-circle-exclamation text-cyan-400"></i> Citizen / Stranded Resident
+            </div>
+            <p class="text-[11px] text-slate-300 mt-0.5">Quick access: Transmit GPS SOS, view status, locate nearest shelter</p>
+          </div>
+          <i class="fas fa-arrow-right text-cyan-400 group-hover:translate-x-1 transition text-xs"></i>
+        </button>
+      </div>
+
+      <div class="text-[10px] text-slate-500 text-center font-mono">
+        Firebase Auth compatible • 1-Click instant testing enabled
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. FIREBASE CONFIG MODAL -->
+  <div id="firebase-config-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-panel border-cyan-500 rounded-2xl max-w-lg w-full p-6">
+      <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
+        <h3 class="text-base font-hud font-bold text-white flex items-center gap-2">
+          <i class="fas fa-database text-cyan-400"></i> Firebase Firestore Configuration
+        </h3>
+        <button onclick="window.appRouter.closeFirebaseConfigModal()" class="text-slate-400 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-300 mb-3">
+        Rescue-Net includes an offline-resilient LocalStorage database that operates instantly. To sync with your live Google Firebase Cloud Firestore, paste your Firebase web config JSON below:
+      </p>
+
+      <textarea id="firebase-config-textarea" rows="8" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-cyan-300 font-mono focus:outline-none focus:border-cyan-400"></textarea>
+
+      <div class="pt-3 flex gap-2">
+        <button onclick="window.RescueDB.clearAllDataAndReset()" class="py-2.5 px-3 bg-red-950/80 hover:bg-red-900 text-red-300 rounded-xl text-xs font-mono border border-red-800" title="Reset to initial seed dataset">
+          Reset Demo Data
+        </button>
+        <button onclick="window.appRouter.saveFirebaseConfig()" class="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-hud font-bold uppercase tracking-wider">
+          Save & Connect
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. WEATHER API CONFIG MODAL -->
+  <div id="weather-api-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-panel border-amber-500 rounded-2xl max-w-md w-full p-6">
+      <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
+        <h3 class="text-base font-hud font-bold text-white flex items-center gap-2">
+          <i class="fas fa-cloud-bolt text-amber-400"></i> OpenWeatherMap API Settings
+        </h3>
+        <button onclick="document.getElementById('weather-api-modal').classList.add('hidden')" class="text-slate-400 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-300 mb-3">
+        By default, realistic simulated disaster telemetry is rendered. Enter a free OpenWeatherMap API key to fetch live satellite weather:
+      </p>
+
+      <div class="space-y-3 text-xs font-mono">
+        <div>
+          <label class="block text-slate-400 mb-1">API KEY</label>
+          <input id="owm-api-key-input" type="text" placeholder="Paste your 32-character API key" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">TARGET CITY</label>
+          <input id="owm-city-input" type="text" value="Chennai" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+        </div>
+      </div>
+
+      <div class="pt-4 flex gap-2">
+        <button onclick="document.getElementById('weather-api-modal').classList.add('hidden')" class="flex-1 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs font-semibold">
+          Cancel
+        </button>
+        <button onclick="window.weatherSystem.setApiKey(document.getElementById('owm-api-key-input').value, document.getElementById('owm-city-input').value); document.getElementById('weather-api-modal').classList.add('hidden');" class="flex-1 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold font-hud">
+          Apply API Key
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. BROADCAST ALERT MODAL -->
+  <div id="broadcast-alert-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-panel-glow border-red-500 rounded-2xl max-w-lg w-full p-6">
+      <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
+        <h3 class="text-lg font-hud font-bold text-white flex items-center gap-2">
+          <i class="fas fa-bullhorn text-red-400"></i> Broadcast Emergency Threat Warning
+        </h3>
+        <button onclick="document.getElementById('broadcast-alert-modal').classList.add('hidden')" class="text-slate-400 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form onsubmit="event.preventDefault(); window.RescueDB.addAlert({ title: document.getElementById('alert-b-title').value, type: document.getElementById('alert-b-type').value, severity: document.getElementById('alert-b-severity').value, description: document.getElementById('alert-b-desc').value, affectedAreas: document.getElementById('alert-b-areas').value, waterLevelGauge: document.getElementById('alert-b-gauge').value, windSpeed: document.getElementById('alert-b-wind').value, evacuationRoute: document.getElementById('alert-b-route').value }); document.getElementById('broadcast-alert-modal').classList.add('hidden'); window.showToast('🚨 Critical Emergency Warning Broadcasted to all terminals!', 'danger');" class="space-y-3 text-xs font-mono">
+        <div>
+          <label class="block text-slate-400 mb-1">ALERT TITLE</label>
+          <input id="alert-b-title" type="text" required placeholder="e.g. CRITICAL: Flash Flood Surge Sector 5" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-slate-400 mb-1">HAZARD CATEGORY</label>
+            <select id="alert-b-type" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+              <option value="FLOOD">Flood</option>
+              <option value="CYCLONE">Cyclone</option>
+              <option value="EARTHQUAKE">Earthquake / Tremor</option>
+              <option value="TSUNAMI">Tsunami</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">SEVERITY LEVEL</label>
+            <select id="alert-b-severity" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+              <option value="CRITICAL">Critical (Red Siren)</option>
+              <option value="WARNING">Warning (Yellow Advisory)</option>
+              <option value="SAFE">Safe (Green All-Clear)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1">ALERT DESCRIPTION</label>
+          <textarea id="alert-b-desc" rows="3" required placeholder="Detailed advisory and meteorological parameters..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white"></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-slate-400 mb-1">AFFECTED REGIONS</label>
+            <input id="alert-b-areas" type="text" placeholder="e.g. Coastal Belt Sectors 1-4" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">EVACUATION CORRIDOR</label>
+            <input id="alert-b-route" type="text" placeholder="e.g. Take Elevated Bypass North" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-slate-400 mb-1">WATER GAUGE</label>
+            <input id="alert-b-gauge" type="text" placeholder="e.g. +3.5m Above Danger Mark" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">WIND VELOCITY</label>
+            <input id="alert-b-wind" type="text" placeholder="e.g. 85 km/h" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+          </div>
+        </div>
+
+        <div class="pt-3 flex gap-2">
+          <button type="button" onclick="document.getElementById('broadcast-alert-modal').classList.add('hidden')" class="flex-1 py-2.5 bg-slate-800 text-slate-300 rounded-xl font-semibold">
+            Cancel
+          </button>
+          <button type="submit" class="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl font-hud font-bold uppercase tracking-wider">
+            Broadcast to Terminals
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TACTICAL TOAST NOTIFICATION CONTAINER -->
+  <div id="tactical-toast-container" class="fixed top-20 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+  <!-- LOAD JAVASCRIPT MODULES IN ORDER -->
+  <script src="./js/firebase-config.js"></script>
+  <script src="./js/weather.js"></script>
+  <script src="./js/sos.js"></script>
+  <script src="./js/tracking.js"></script>
+  <script src="./js/drones.js"></script>
+  <script src="./js/mesh.js"></script>
+  <script src="./js/shelters.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "Rescue-Net - AI Natural Disaster Management System",
+  "short_name": "Rescue-Net",
+  "description": "AI-Powered Natural Disaster Management, Offline LoRa/BLE Mesh SOS & Drone Command System",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0B1120",
+  "theme_color": "#DC2626",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
